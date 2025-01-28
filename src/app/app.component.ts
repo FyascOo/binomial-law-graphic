@@ -1,29 +1,18 @@
+import { appConfig } from './app.config';
 import { Component } from '@angular/core';
 import { RouterLink, RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './component/header.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterOutlet, HeaderComponent],
   template: `
-    <nav>
-      <a routerLink="/">Home</a>
-    </nav>
-
-    <router-outlet />
+    <app-header />
+    <div class="p-8">
+      <router-outlet />
+    </div>
   `,
-  styles: `
-    :host {
-      max-width: 1280px;
-      margin: 0 auto;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    nav {
-      text-align: left;
-      padding: 0 0 2rem 0;
-    }
-  `,
+  styles: ``,
 })
 export class AppComponent {}
