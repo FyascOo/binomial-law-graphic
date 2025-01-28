@@ -4,12 +4,19 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [RouterLink, MatFormFieldModule, MatInputModule, FormsModule],
-  template: `<h1>Hello</h1>
+  imports: [
+    RouterLink,
+    MatFormFieldModule,
+    MatInputModule,
+    FormsModule,
+    BaseChartDirective,
+  ],
+  template: `<h1></h1>
     <mat-form-field>
       <mat-label>Répétition</mat-label>
       <input matInput type="number" [(ngModel)]="n" />
@@ -23,16 +30,45 @@ import { MatInputModule } from '@angular/material/input';
       <mat-label>Succès</mat-label>
       <input matInput type="number" [(ngModel)]="k" />
     </mat-form-field>
-    <p>Pile poil {{ k() }}: {{ result() }}</p>
-    <p>Au moins {{ k() }}: {{ result2() }}</p>
-    <p>Moins de {{ k() }}: {{ 1 - result2() }}</p> `,
+    <p>Pile poil {{ k() }}: {{ result() }}%</p>
+    <p>Au moins {{ k() }}: {{ result2() }}%</p>
+    <p>Moins de {{ k() }}: {{ result3() }}%</p>
+    <canvas baseChart [data]="data()" [options]="barChartOptions" type="line">
+    </canvas>`,
 })
 export default class HomeComponent {
-  n = model(10);
-  p = model(0.5);
-  k = model(5);
-  result = computed(() => this.binomialLaw(this.n(), this.p(), this.k()));
-  result2 = computed(() => 1 - this.binomialLaw2(this.n(), this.p(), this.k()));
+  barChartOptions = {
+    scales: {
+      y: {
+        beginAtZero: true,
+      },
+    },
+  };
+  n = model(8);
+  p = model(1 / 8);
+  k = model(1);
+  result = computed(() =>
+    (this.binomialLaw(this.n(), this.p(), this.k()) * 100).toFixed(2)
+  );
+  result2 = computed(() =>
+    (this.binomialLaw2(this.n(), this.p(), this.k()) * 100).toFixed(2)
+  );
+  result3 = computed(() =>
+    (this.binomialLaw3(this.n(), this.p(), this.k()) * 100).toFixed(2)
+  );
+
+  data = computed(() => ({
+    labels: this.binomialList(this.n(), this.p(), this.k()).map((v, i) => i),
+    datasets: [
+      {
+        label: "Nombre d'unique ",
+        data: this.binomialList(this.n(), this.p(), this.k()),
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
+      },
+    ],
+  }));
 
   binomialCoefficient = (n: number, k: number) => {
     if (k < 0 || k > n) return 0;
@@ -62,9 +98,19 @@ export default class HomeComponent {
     const i = n - k;
     const iList = Array.from({ length: i }, (_, index) => index);
     const listBinomial = iList.map((v: number) =>
-      this.binomialLaw(n, p, +v + k)
+      this.binomialLaw(n, p, v + k)
     );
-    console.log(listBinomial);
     return listBinomial.reduce((sum, a) => sum + a, 0);
+  };
+
+  binomialLaw3 = (n: number, p: number, k: number) => {
+    const iList = Array.from({ length: k }, (_, index) => index);
+    const listBinomial = iList.map((v: number) => this.binomialLaw(n, p, v));
+    return listBinomial.reduce((sum, a) => sum + a, 0);
+  };
+
+  binomialList = (n: number, p: number, k: number) => {
+    const iList = Array.from({ length: n }, (_, index) => index);
+    return iList.map((v: number) => this.binomialLaw(n, p, v));
   };
 }

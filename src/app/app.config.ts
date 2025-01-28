@@ -9,6 +9,7 @@ import { provideFileRouter, requestContextInterceptor } from '@analogjs/router';
 import { provideContent, withMarkdownRenderer } from '@analogjs/content';
 import { withPrismHighlighter } from '@analogjs/content/prism-highlighter';
 import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 
 export const appConfig: ApplicationConfig = {
   providers: [
@@ -20,6 +21,6 @@ export const appConfig: ApplicationConfig = {
     ),
     provideClientHydration(),
     provideContent(withMarkdownRenderer(), withPrismHighlighter()),
-    provideAnimations(),
+    provideAnimations(), provideCharts(withDefaultRegisterables()),
   ],
 };
