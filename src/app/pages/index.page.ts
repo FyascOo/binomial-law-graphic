@@ -33,8 +33,18 @@ import { BaseChartDirective } from 'ng2-charts';
     <p>Pile poil {{ k() }}: {{ result() }}%</p>
     <p>Au moins {{ k() }}: {{ result2() }}%</p>
     <p>Moins de {{ k() }}: {{ result3() }}%</p>
-    <canvas baseChart [data]="data()" [options]="barChartOptions" type="line">
-    </canvas>`,
+    <canvas
+      baseChart
+      [data]="data()"
+      [options]="barChartOptions"
+      type="line"
+    ></canvas>
+    <canvas
+      baseChart
+      [data]="data2()"
+      [options]="barChartOptions"
+      type="line"
+    ></canvas> `,
 })
 export default class HomeComponent {
   barChartOptions = {
@@ -44,9 +54,9 @@ export default class HomeComponent {
       },
     },
   };
-  n = model(8);
+  n = model(36);
   p = model(1 / 8);
-  k = model(1);
+  k = model(6);
   result = computed(() =>
     (this.binomialLaw(this.n(), this.p(), this.k()) * 100).toFixed(2)
   );
@@ -58,11 +68,24 @@ export default class HomeComponent {
   );
 
   data = computed(() => ({
-    labels: this.binomialList(this.n(), this.p(), this.k()).map((v, i) => i),
+    labels: this.binomialList(this.n(), this.p()).map((v, i) => i),
     datasets: [
       {
         label: "Nombre d'unique ",
-        data: this.binomialList(this.n(), this.p(), this.k()),
+        data: this.binomialList(this.n(), this.p()),
+        fill: false,
+        borderColor: 'rgb(75, 192, 192)',
+        tension: 0.1,
+      },
+    ],
+  }));
+
+  data2 = computed(() => ({
+    labels: this.binomialList2(this.n(), this.p(), this.k()).map((v, i) => i),
+    datasets: [
+      {
+        label: "Chance d'obtenir 6 unique  ",
+        data: this.binomialList2(this.n(), this.p(), this.k()),
         fill: false,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1,
@@ -109,8 +132,12 @@ export default class HomeComponent {
     return listBinomial.reduce((sum, a) => sum + a, 0);
   };
 
-  binomialList = (n: number, p: number, k: number) => {
-    const iList = Array.from({ length: n }, (_, index) => index);
+  binomialList = (n: number, p: number) => {
+    const iList = Array.from({ length: n + 1 }, (_, index) => index);
     return iList.map((v: number) => this.binomialLaw(n, p, v));
+  };
+  binomialList2 = (n: number, p: number, k: number) => {
+    const iList = Array.from({ length: n + 1 }, (_, index) => index);
+    return iList.map((v) => this.binomialLaw2(v, p, k));
   };
 }
