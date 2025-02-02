@@ -2,6 +2,7 @@ import { Component, computed, model } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { FormsModule } from '@angular/forms';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { BaseChartDirective } from 'ng2-charts';
@@ -15,63 +16,93 @@ import { BaseChartDirective } from 'ng2-charts';
     MatInputModule,
     FormsModule,
     BaseChartDirective,
+    MatDividerModule,
   ],
-  template: `<h1></h1>
-    <mat-form-field>
-      <mat-label>Répétition</mat-label>
-      <input matInput type="number" [(ngModel)]="n" />
-    </mat-form-field>
+  template: ` <div class="flex justify-center">
+    <div class="w-4/5">
+      <h1 class="text-3xl font-bold mb-5">Tirage sans remise</h1>
+      <p class="mb-5">
+        Choisir le nombre de répétition, la probabilité de l'évènement et le
+        nombre de succès :
+      </p>
+      <div class="flex justify-between">
+        <mat-form-field>
+          <mat-label>Répétition</mat-label>
+          <input matInput type="number" [(ngModel)]="n" />
+        </mat-form-field>
 
-    <mat-form-field class="example-full-width">
-      <mat-label>Probabilité</mat-label>
-      <input matInput type="number" [(ngModel)]="p" />
-    </mat-form-field>
-    <mat-form-field class="example-full-width">
-      <mat-label>Succès</mat-label>
-      <input matInput type="number" [(ngModel)]="k" />
-    </mat-form-field>
-    <p>Pile poil {{ k() }}: {{ result() }}%</p>
-    <p>Au moins {{ k() }}: {{ result2() }}%</p>
-    <p>Moins de {{ k() }}: {{ result3() }}%</p>
-    <canvas
-      baseChart
-      [data]="data()"
-      [options]="barChartOptions"
-      type="line"
-    ></canvas>
-    <canvas
-      baseChart
-      [data]="data2()"
-      [options]="barChartOptions"
-      type="line"
-    ></canvas> `,
+        <mat-form-field>
+          <mat-label>Probabilité</mat-label>
+          <input matInput type="number" [(ngModel)]="p" />
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Succès</mat-label>
+          <input matInput type="number" [(ngModel)]="k" />
+        </mat-form-field>
+      </div>
+      <p>
+        Il y a {{ binomialLawChanges() }}% que l'évènement arrive exactement
+        {{ k() }} fois.
+      </p>
+      <p>
+        Et {{ atLestBinomialLawChanges() }}% qu'il arrive au moins
+        {{ k() }} fois.
+      </p>
+      <p class="mb-8">
+        Enfin, {{ lessThanBinomialLawChanges() }}% qu'il arrive moins de
+        {{ k() }} fois
+      </p>
+      <mat-divider></mat-divider>
+      <p class="mt-8">
+        Ce graphique représente la probabilité d'obtenir un nombre de succès
+        pour un total de {{ n() }} répétitions
+      </p>
+      <canvas
+        baseChart
+        [data]="data()"
+        [options]="barChartOptions"
+        type="line"
+      ></canvas>
+      <p>
+        Ce graphique représente la probabilité d'avoir {{ k() }} succès en
+        fonction du nombre de répétition.
+      </p>
+      <canvas
+        baseChart
+        [data]="data2()"
+        [options]="barChartOptions"
+        type="line"
+      ></canvas>
+    </div>
+  </div>`,
 })
 export default class HomeComponent {
   barChartOptions = {
     scales: {
       y: {
         beginAtZero: true,
+        max: 1,
       },
     },
   };
   n = model(36);
   p = model(1 / 8);
   k = model(6);
-  result = computed(() =>
+  binomialLawChanges = computed(() =>
     (this.binomialLaw(this.n(), this.p(), this.k()) * 100).toFixed(2)
   );
-  result2 = computed(() =>
-    (this.binomialLaw2(this.n(), this.p(), this.k()) * 100).toFixed(2)
+  atLestBinomialLawChanges = computed(() =>
+    (this.atLestBinomialLaw(this.n(), this.p(), this.k()) * 100).toFixed(2)
   );
-  result3 = computed(() =>
-    (this.binomialLaw3(this.n(), this.p(), this.k()) * 100).toFixed(2)
+  lessThanBinomialLawChanges = computed(() =>
+    (this.lessThanBinomialLaw(this.n(), this.p(), this.k()) * 100).toFixed(2)
   );
 
   data = computed(() => ({
     labels: this.binomialList(this.n(), this.p()).map((v, i) => i),
     datasets: [
       {
-        label: "Nombre d'unique ",
+        label: `Chance d'obtenir un nombre de succès pour ${this.n()} répétitions`,
         data: this.binomialList(this.n(), this.p()),
         fill: false,
         borderColor: 'rgb(75, 192, 192)',
@@ -81,11 +112,15 @@ export default class HomeComponent {
   }));
 
   data2 = computed(() => ({
-    labels: this.binomialList2(this.n(), this.p(), this.k()).map((v, i) => i),
+    labels: this.atLeastBinomialLawBinomialList(
+      this.n(),
+      this.p(),
+      this.k()
+    ).map((v, i) => i),
     datasets: [
       {
-        label: "Chance d'obtenir 6 unique  ",
-        data: this.binomialList2(this.n(), this.p(), this.k()),
+        label: `Chance d'obtenir au moins ${this.k()} succès en fonction du nombre de répétition`,
+        data: this.atLeastBinomialLawBinomialList(this.n(), this.p(), this.k()),
         fill: false,
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1,
@@ -117,8 +152,8 @@ export default class HomeComponent {
     );
   };
 
-  binomialLaw2 = (n: number, p: number, k: number) => {
-    const i = n - k;
+  atLestBinomialLaw = (n: number, p: number, k: number) => {
+    const i = n - k; //number of success and more
     const iList = Array.from({ length: i }, (_, index) => index);
     const listBinomial = iList.map((v: number) =>
       this.binomialLaw(n, p, v + k)
@@ -126,7 +161,7 @@ export default class HomeComponent {
     return listBinomial.reduce((sum, a) => sum + a, 0);
   };
 
-  binomialLaw3 = (n: number, p: number, k: number) => {
+  lessThanBinomialLaw = (n: number, p: number, k: number) => {
     const iList = Array.from({ length: k }, (_, index) => index);
     const listBinomial = iList.map((v: number) => this.binomialLaw(n, p, v));
     return listBinomial.reduce((sum, a) => sum + a, 0);
@@ -136,8 +171,8 @@ export default class HomeComponent {
     const iList = Array.from({ length: n + 1 }, (_, index) => index);
     return iList.map((v: number) => this.binomialLaw(n, p, v));
   };
-  binomialList2 = (n: number, p: number, k: number) => {
+  atLeastBinomialLawBinomialList = (n: number, p: number, k: number) => {
     const iList = Array.from({ length: n + 1 }, (_, index) => index);
-    return iList.map((v) => this.binomialLaw2(v, p, k));
+    return iList.map((v) => this.atLestBinomialLaw(v, p, k));
   };
 }
